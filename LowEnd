@@ -1,0 +1,63 @@
+local function createFPSBillboard(player)
+    local gui = Instance.new("BillboardGui")
+    gui.Size = UDim2.new(0, 200, 0, 50)
+    gui.StudsOffset = Vector3.new(0, 3, 0) -- Adjust the position as needed
+    gui.Name = "FPSGui"
+    gui.AlwaysOnTop = true
+    
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Size = UDim2.new(1, 0, 1, 0)
+    textLabel.BackgroundTransparency = 1
+    textLabel.TextScaled = true
+    textLabel.Font = Enum.Font.PermanentMarker -- Set the font to PermanentMarker
+    textLabel.TextStrokeTransparency = 0.5 -- Optional: Adds stroke to the text
+    textLabel.Parent = gui
+
+    -- Parent the GUI to the player's character Head
+    local character = player.Character or player.CharacterAdded:Wait()
+    local head = character:WaitForChild("Head")
+    gui.Parent = head
+    
+    return textLabel
+end
+
+local function handleLagSpike()
+    -- Handle lag spike here (e.g., show a warning to the player)
+end
+
+local function removeWaterAndWaves()
+    for _, water in pairs(workspace:FindPartsInRegion3(workspace.CurrentCamera.CFrame:PointToWorldSpace(workspace.CurrentCamera.ViewportSizeToWorld), nil)) do
+        if water.Name == "Water" then
+            water:Destroy()
+        end
+    end
+end
+
+local player = game.Players.LocalPlayer
+local fpsLabel = createFPSBillboard(player)
+
+function updateFPSDisplay()
+    local fps = math.floor(1 / game:GetService("RunService").RenderStepped:Wait())
+    fpsLabel.Text = "FPS: " .. fps
+    if fps <= 20 then
+        fpsLabel.TextColor3 = Color3.new(1, 0, 0) -- Red for low FPS
+        handleLagSpike()
+    elseif fps <= 30 then
+        fpsLabel.TextColor3 = Color3.new(1, 0.647, 0) -- Orange for medium FPS
+    else
+        fpsLabel.TextColor3 = Color3.new(0, 1, 0) -- Green for high FPS
+    end
+end
+
+game:GetService("RunService").RenderStepped:Connect(updateFPSDisplay)
+
+-- Set the skybox to black
+game.Lighting.Ambient = Color3.new(0, 0, 0)
+
+-- Remove water and waves
+removeWaterAndWaves()
+
+-- Prevent water from spawning
+game:GetService("Workspace").WaterSystem.WaterTransparency = 0
+game:GetService("Workspace").WaterSystem.WaveSpeed = 0
+game:GetService("Workspace").WaterSystem.Size = 0
